@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
-project(Genetica C)
+project(vserie C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(Genetica main.c)
+add_executable(vserie main.c)
