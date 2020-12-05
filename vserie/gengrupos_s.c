@@ -44,9 +44,9 @@ void main (int argc, char *argv[]) {
 
   printf ("\n >> Ejecucion serie\n");
   clock_gettime (CLOCK_REALTIME, &t1);
-  
 
   // Lectura de datos (muestras): elem[i][j]
+
   fd = fopen (argv[1], "r");
   if (fd == NULL) {
     printf ("Error al abrir el fichero %s\n", argv[1]);
@@ -62,9 +62,7 @@ void main (int argc, char *argv[]) {
 
   fclose (fd);
 
-
-  // lectura de datos (enfermedades): enf[i][j]
-  // ==========================================
+  // Lectura de datos (enfermedades): enf[i][j]
 
   fd = fopen (argv[2], "r");
   if (fd == NULL) {
@@ -78,24 +76,24 @@ void main (int argc, char *argv[]) {
   }
   fclose (fd);
 
-
-  // generacion de los primeros centroides de forma aleatoria
-  // ========================================================
+  // Generacion de los primeros centroides de forma aleatoria
 
   srand (147);
-  for (i=0; i<NGRUPOS; i++) 
-  for (j=0; j<NCAR/2; j++)
-   { 
-     cent[i][j] = (rand() % 10000) / 100.0; 
-     cent[i][j+(NCAR/2)] = cent[i][j]; 
-   } 
+  for (i=0; i<NGRUPOS; i++) {
+      for (j = 0; j < NCAR / 2; j++) {
+          cent[i][j] = (rand() % 10000) / 100.0;
+          cent[i][j + (NCAR / 2)] = cent[i][j];
+      }
+  }
 
 
   // 1. fase: Clasificar los elementos y calcular los nuevos centroides
+
   num_ite = 0; fin = 0;
   while ((fin == 0) && (num_ite < MAXIT)) {
-    // Calcular el grupo mas cercano
-    grupo_cercano (nelem, elem, cent, popul);
+      // Calcular el grupo mas cercano
+
+      grupo_cercano (nelem, elem, cent, popul);
 
     // Calcular los nuevos centroides de los grupos
     // Media de cada caracteristica
