@@ -21,7 +21,7 @@ struct lista_grupos listag[NGRUPOS];   // Lista de elementos de los grupos
 
 
 // Programa principal
-void main (int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
   float   cent[NGRUPOS][NCAR], newcent[NGRUPOS][NCAR]; // Centroides
   float   densidad[NGRUPOS];	                       // Densidad de cada cluster
   struct  analisis prob_enf[TENF];                     // Analisis de los tipos de enfermedades
@@ -190,6 +190,8 @@ void main (int argc, char *argv[]) {
   
   printf ("\n >> Numero de iteraciones: %d", num_ite);
   printf ("\n >> Tex (serie): %1.3f s\n\n", texe);
+
+  return 0;
 }
 
 
