@@ -17,11 +17,11 @@
 double gendist (float *elem1, float *elem2) {
     float elem, acum = 0;
     for(int i = 0; i < NCAR; i++) {
-        elem = *(elem1+(4*i)) - *(elem2+(4*i));
+        elem = elem1[i] - elem2[i];
         elem = pow(elem, 2);
         acum += elem;
     }
-    return sqrt(elem);
+    return sqrt(acum);
 }
 /**********************************************************************************************************
  * 2 - Funcion para calcular el grupo (cluster) mas cercano (centroide mas cercano)                       *
@@ -31,16 +31,19 @@ double gendist (float *elem1, float *elem2) {
  *          Salida:   popul  grupo mas cercano a cada elemento, vector de tamano MAXE, por referencia      *
  **********************************************************************************************************/
 void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
-    float aelem, adis, ngrupo, dmin = FLT_MAX;
-    for (int i = 0; i < MAXE; i++) {
-        for (int j = 0; j < NGRUPOS; j++) {
-            adis = gendist((&elem)*i, (&cent)*j);
-            if (adis < dmin) {
-                dmin = adis;
-                ngrupo = j;
+    int ngrupo;
+    float adis, dmin = FLT_MAX;
+    for (int i = 0; i < nelem; i++) {
+        for (int j = 0; j < MAXE; j++) {
+            for (int k = 0; k < NGRUPOS; k++) {
+                adis = gendist(elem[j], cent[k]); // elem[j] o &elem[j][0]
+                if (adis < dmin) {
+                    dmin = adis;
+                    ngrupo = k;
+                }
             }
+            popul[j] = ngrupo;
         }
-        *(popul+(i*4)) = ngrupo;
     }
 }
 /**********************************************************************************************************
@@ -50,21 +53,21 @@ void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popu
  *          Salida:   densidad densidad de los grupos (vector de tamano NGRUPOS, por referencia)          *
  **********************************************************************************************************/
 void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *densidad) {
-    int nelem = listag->nelemg;
-    if (nelem < 2) {
-        *densidad = 0;
-    }
-    else {
-        float acum, actg;
-        for (int i = 0; i < nelem; i++) {
-            acum = 0;
-            actg = listag->elemg[i];
-            for (int j = 0; j < MAXE; j++) {
-                if (j != actg) {
-                    acum += gendist((&elem)*actg, (&elem)*j)
+    for (int i = 0; i < NGRUPOS; i++) {
+        int nelem = listag[i].nelemg;
+        if (nelem < 2) {
+            densidad[i] = 0;
+        }
+        else {
+            int actg;
+            float acum = 0;
+            for (int j = 0; j < nelem; j++) {
+                actg = listag[i].elemg[j];
+                for (int k = j+1; k < nelem; k++) {
+                    acum += gendist(elem[actg], elem[k]);
                 }
+                densidad[i] = acum/nelem;
             }
-            *(densidad+(i*4)) = acum/MAXE-1;
         }
     }
 }
@@ -75,11 +78,29 @@ void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *
  *          Salida:   prob_enf vector de TENF structs (informacion del analisis realizado), por ref.      *
  **********************************************************************************************************/
 void analizar_enfermedades (struct lista_grupos *listag, float enf[][TENF], struct analisis *prob_enf) {
-    // TODO Realizar el analisis de enfermedades en los grupos:
-    //        maximo y grupo en el que se da el maximo (para cada enfermedad)
-    //        minimo y grupo en el que se da el minimo (para cada enfermedad)
-
+    for (int i = 0; i < TENF; i++) {
+        float mediamin = FLT_MAX, mediamax = FLT_MIN;
+        int gmax, gmin;
+        for (int j = 0; j < NGRUPOS; j++) {
+            int nelem = listag[j].nelemg;
+            float acum = 0;
+            for (int k = 0; k < nelem; k++) {
+                int actg = listag[j].elemg[k];
+                acum += enf[actg][i];
+            }
+            float mediaact = acum/nelem;
+            if (mediaact < mediamin) {
+                mediamin = mediaact;
+                gmin = j;
+            }
+            else if (mediaact >= mediamax) {
+                mediamax = mediaact;
+                gmax = j;
+            }
+        }
+        prob_enf[i].max = mediamax;
+        prob_enf[i].min = mediamin;
+        prob_enf[i].gmax = gmax;
+        prob_enf[i].gmin = gmin;
+    }
 }
-
-
-

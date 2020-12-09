@@ -2,7 +2,6 @@
  *                      Cabeceras de las funciones utilizadas en el modulo gengrupos                      *
  *                                              fun.h                                                     *
  **********************************************************************************************************/
-#include "defineg.h"
 
 extern double gendist (float *elem1, float *elem2);
 extern void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul);
