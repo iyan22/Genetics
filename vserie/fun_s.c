@@ -31,19 +31,20 @@ double gendist (float *elem1, float *elem2) {
  *          Salida:   popul  grupo mas cercano a cada elemento, vector de tamano MAXE, por referencia      *
  **********************************************************************************************************/
 void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
-    int ngrupo;
-    float adis, dmin = FLT_MAX;
+    float adis;
     for (int i = 0; i < nelem; i++) {
-        for (int j = 0; j < MAXE; j++) {
+        //for (int j = 0; j < MAXE; j++) {
+            int ngrupo;
+            float dmin = FLT_MAX;
             for (int k = 0; k < NGRUPOS; k++) {
-                adis = gendist(elem[j], cent[k]); // elem[j] o &elem[j][0]
+                adis = gendist(elem[i], cent[k]); // elem[j] o &elem[j][0]
                 if (adis < dmin) {
                     dmin = adis;
                     ngrupo = k;
                 }
             }
-            popul[j] = ngrupo;
-        }
+            popul[i] = ngrupo;
+        //}
     }
 }
 /**********************************************************************************************************
