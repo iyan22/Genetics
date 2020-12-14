@@ -15,43 +15,92 @@
  *          Salida:   distancia (double)                                                                  *
  **********************************************************************************************************/
 double gendist (float *elem1, float *elem2) {
-    // TODO Calcular la distancia euclidea entre dos vectores
+    double acum = 0;
+    for (int i = 0; i < NCAR; i++) {
+        double res = elem1[i] - elem2[i];
+        acum += pow(res, 2);
+    }
+    return sqrt(acum);
 }
-
 /**********************************************************************************************************
  * 2 - Funcion para calcular el grupo (cluster) mas cercano (centroide mas cercano)                       *
  *          Entrada:  nelem  numero de elementos, int                                                     *
  *                    elem   elementos, una matriz de tamano MAXE x NCAR, por referencia                  *
  *                    cent   centroides, una matriz de tamano NGRUPOS x NCAR, por referencia              *
- *          Salida:   popul  grupo mas ercano a cada elemento, vector de tamano MAXE, por referencia      *
+ *          Salida:   popul  grupo mas cercano a cada elemento, vector de tamano MAXE, por referencia      *
  **********************************************************************************************************/
-void grupo_cercano (int nelem, float elem[MAXE][NCAR], float cent[NGRUPOS][NCAR], int *popul[MAXE]) {
-    // TODO popul: grupo mas cercano a cada elemento
+void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
+    int ngrupo;
+    double adis, dmin;
+    for (int i = 0; i < nelem; i++) {
+        dmin = DBL_MAX;
+        for (int j = 0; j < NGRUPOS; j++) {
+            adis = gendist(elem[i], cent[j]); // elem[i] o &elem[i][0]
+            if (adis < dmin) {
+                dmin = adis;
+                ngrupo = j;
+            }
+        }
+        popul[i] = ngrupo;
+    }
 }
-
 /**********************************************************************************************************
  * 3 - Funcion para calcular la densidad del grupo (dist. media entre todos sus elementos)                *
  *          Entrada:  elem     elementos, una matriz de tamano MAXE x NCAR, por referencia                *
  *                    listag   vector de NGRUPOS structs (informacion de grupos generados), por ref.      *
  *          Salida:   densidad densidad de los grupos (vector de tamano NGRUPOS, por referencia)          *
  **********************************************************************************************************/
-void calcular_densidad (float elem[MAXE][NCAR], struct lista_grupos *listag, float *densidad) {
-    // TODO Calcular la densidad de los grupos:
-    //        media de las distancia entre todos los elementos del grupo
-    //        si el numero de elementos del grupo es 0 o 1, densidad = 0
+void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *densidad) {
+    for (int i = 0; i < NGRUPOS; i++) {
+        int nelem = listag[i].nelemg;
+        if (nelem < 2) {
+            densidad[i] = 0;
+        }
+        else {
+            int actg;
+            double acum = 0.0, cont = 0.0;
+            for (int j = 0; j < nelem; j++) {
+                actg = listag[i].elemg[j];
+                for (int k = j+1; k < nelem; k++) {
+                    int othg = listag[i].elemg[k];
+                    acum += gendist(elem[actg], elem[othg]);
+                    cont += 1.0;
+                }
+            }
+            densidad[i] = (float) (acum/cont);
+        }
+    }
 }
-
 /**********************************************************************************************************
  * 4 - Funcion para relizar el analisis de enfermedades                                                   *
  *          Entrada:  listag   vector de NGRUPOS structs (informacion de grupos generados), por ref.      *
  *                    enf      enfermedades, una matriz de tamano MAXE x TENF, por referencia             *
  *          Salida:   prob_enf vector de TENF structs (informacion del analisis realizado), por ref.      *
  **********************************************************************************************************/
-void analizar_enfermedades (struct lista_grupos *listag, float enf[MAXE][TENF], struct analisis *prob_enf) {
-    // TODO Realizar el analisis de enfermedades en los grupos:
-    //        maximo y grupo en el que se da el maximo (para cada enfermedad)
-    //        minimo y grupo en el que se da el minimo (para cada enfermedad)
+void analizar_enfermedades (struct lista_grupos *listag, float enf[][TENF], struct analisis *prob_enf) {
+    for (int i = 0; i < TENF; i++) {
+        float mediamin = FLT_MAX, mediamax = FLT_MIN;
+        int gmax, gmin;
+        for (int j = 0; j < NGRUPOS; j++) {
+            int nelem = listag[j].nelemg;
+            float acum = 0;
+            for (int k = 0; k < nelem; k++) {
+                int actg = listag[j].elemg[k];
+                acum += enf[actg][i];
+            }
+            float mediaact = acum/nelem;
+            if (mediaact < mediamin) {
+                mediamin = mediaact;
+                gmin = j;
+            }
+            else if (mediaact >= mediamax) {
+                mediamax = mediaact;
+                gmax = j;
+            }
+        }
+        prob_enf[i].max = mediamax;
+        prob_enf[i].min = mediamin;
+        prob_enf[i].gmax = gmax;
+        prob_enf[i].gmin = gmin;
+    }
 }
-}
-
-
