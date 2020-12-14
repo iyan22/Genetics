@@ -17,7 +17,8 @@
 double gendist (float *elem1, float *elem2) {
     double acum = 0;
     for (int i = 0; i < NCAR; i++) {
-        acum += pow(elem1[i] - elem2[i], 2);
+        double res = elem1[i] - elem2[i];
+        acum += pow(res, 2);
     }
     return sqrt(acum);
 }
@@ -61,7 +62,8 @@ void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *
             for (int j = 0; j < nelem; j++) {
                 actg = listag[i].elemg[j];
                 for (int k = j+1; k < nelem; k++) {
-                    acum += gendist(elem[actg], elem[k]);
+                    int othg = listag[i].elemg[k];
+                    acum += gendist(elem[actg], elem[othg]);
                     cont += 1.0;
                 }
             }
