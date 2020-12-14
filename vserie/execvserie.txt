@@ -1,0 +1,2 @@
+gcc -O2 -o gengrupos_s gengrupos_s.c fun_s.c -lm
+./gengrupos_s dbgen.dat dbenf.dat
