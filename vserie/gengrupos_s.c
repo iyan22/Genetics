@@ -3,7 +3,7 @@
  *                  Compilar con el modulo fun_s.c y la opcion -lm                                        *
  *                                  gengrupos_s.c                                                         *
  *                                                                                                        *
- *      Entrada: dbgen.dat    fichero con la informacion vserie de cada muestra                         *
+ *      Entrada: dbgen.dat    fichero con la informacion vserie de cada muestra                           *
  *               dbenf.dat    fichero con la informacion sobre las enfermedades de cada muestra           *
  *      Salida:  dbgen_s.out  centroides, densidad, analisis                                              *
  **********************************************************************************************************/

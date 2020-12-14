@@ -15,11 +15,9 @@
  *          Salida:   distancia (double)                                                                  *
  **********************************************************************************************************/
 double gendist (float *elem1, float *elem2) {
-    float elem, acum = 0;
-    for(int i = 0; i < NCAR; i++) {
-        elem = elem1[i] - elem2[i];
-        elem = pow(elem, 2);
-        acum += elem;
+    double acum = 0;
+    for (int i = 0; i < NCAR; i++) {
+        acum += pow(elem1[i] - elem2[i], 2);
     }
     return sqrt(acum);
 }
@@ -31,20 +29,18 @@ double gendist (float *elem1, float *elem2) {
  *          Salida:   popul  grupo mas cercano a cada elemento, vector de tamano MAXE, por referencia      *
  **********************************************************************************************************/
 void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
-    float adis;
+    int ngrupo;
+    double adis, dmin;
     for (int i = 0; i < nelem; i++) {
-        //for (int j = 0; j < MAXE; j++) {
-            int ngrupo;
-            float dmin = FLT_MAX;
-            for (int k = 0; k < NGRUPOS; k++) {
-                adis = gendist(elem[i], cent[k]); // elem[j] o &elem[j][0]
-                if (adis < dmin) {
-                    dmin = adis;
-                    ngrupo = k;
-                }
+        dmin = DBL_MAX;
+        for (int j = 0; j < NGRUPOS; j++) {
+            adis = gendist(elem[i], cent[j]); // elem[i] o &elem[i][0]
+            if (adis < dmin) {
+                dmin = adis;
+                ngrupo = j;
             }
-            popul[i] = ngrupo;
-        //}
+        }
+        popul[i] = ngrupo;
     }
 }
 /**********************************************************************************************************
@@ -61,14 +57,15 @@ void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *
         }
         else {
             int actg;
-            float acum = 0;
+            double acum = 0.0, cont = 0.0;
             for (int j = 0; j < nelem; j++) {
                 actg = listag[i].elemg[j];
                 for (int k = j+1; k < nelem; k++) {
                     acum += gendist(elem[actg], elem[k]);
+                    cont += 1.0;
                 }
-                densidad[i] = acum/nelem;
             }
+            densidad[i] = (float) (acum/cont);
         }
     }
 }
