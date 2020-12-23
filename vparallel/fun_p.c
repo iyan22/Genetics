@@ -1,5 +1,5 @@
 /**********************************************************************************************************
- *                              AC - OpenMP -- PARALELA                                                      *
+ *                              AC - OpenMP -- PARALELO                                                   *
  *                  Rutinas que se utilizan en el modulo gengrupos_s.c                                    *
  *                                   fun_p.c                                                              *
  **********************************************************************************************************/
@@ -32,24 +32,19 @@ double gendist (float *elem1, float *elem2) {
  *          Salida:   popul  grupo mas cercano a cada elemento, vector de tamano MAXE, por referencia      *
  **********************************************************************************************************/
 void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
-    int ngrupo, i;
+    int ngrupo, i, j;
     double adis, dmin;
-    #pragma omp parallel private (i, adis, dmin, ngrupo)
-    {
-        # pragma omp parallel for schedule (dynamic,1)
-        {
-            for (i = 0; i < nelem; i++) {
-                dmin = DBL_MAX;
-                for (int j = 0; j < NGRUPOS; j++) {
-                    adis = gendist(elem[i], cent[j]); // elem[i] o &elem[i][0]
-                    if (adis < dmin) {
-                        dmin = adis;
-                        ngrupo = j;
-                    }
-                }
-                popul[i] = ngrupo;
+    #pragma omp parallel for private(i, j, adis, dmin, ngrupo) schedule(static,1) num_threads(32)
+    for (i = 0; i < nelem; i++) {
+        dmin = DBL_MAX;
+        for (j = 0; j < NGRUPOS; j++) {
+            adis = gendist(elem[i], cent[j]); // elem[i] o &elem[i][0]
+            if (adis < dmin) {
+                dmin = adis;
+                ngrupo = j;
             }
         }
+        popul[i] = ngrupo;
     }
 }
 /**********************************************************************************************************
@@ -69,20 +64,15 @@ void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *
         else {
             acum = 0.0;
             cont = 0.0;
-#pragma omp parallel private (j, k, actg, othg) shared(acum, cont)
-            {
-#pragma omp for schedule (dynamic, 2)
-                for (j = 0; j < nelem; j++) {
-                    actg = listag[i].elemg[j];
-                    for (k = j + 1; k < nelem; k++) {
-                        othg = listag[i].elemg[k];
-                        acum += gendist(elem[actg], elem[othg]);
-                        cont += 1.0;
-                    }
+            for (j = 0; j < nelem; j++) {
+                actg = listag[i].elemg[j];
+                for (k = j + 1; k < nelem; k++) {
+                    othg = listag[i].elemg[k];
+                    acum += gendist(elem[actg], elem[othg]);
+                    cont += 1.0;
                 }
-#pragma omp barrier
-                densidad[i] = (float) (acum / cont);
             }
+            densidad[i] = (float) (acum / cont);
         }
     }
 }
@@ -97,29 +87,22 @@ void analizar_enfermedades (struct lista_grupos *listag, float enf[][TENF], stru
     float mediaact, acum, mediamin, mediamax;
     for (i = 0; i < TENF; i++) {
         mediamin = FLT_MAX, mediamax = FLT_MIN;
-#pragma omp parallel private (j, k, acum) shared(actg, nelem, mediaact, mediamin, mediamax, gmin, gmax)
-        {
-# pragma omp parallel for schedule (dynamic,1)
-            for (j = 0; j < NGRUPOS; j++) {
-                nelem = listag[j].nelemg;
-                acum = 0;
-                for (k = 0; k < nelem; k++) {
-                    actg = listag[j].elemg[k];
-                    acum += enf[actg][i];
-                }
-#pragma omp critical
-                mediaact = acum/nelem;
-                if (mediaact < mediamin) {
-                    mediamin = mediaact;
-                    gmin = j;
-                }
-                else if (mediaact >= mediamax) {
-                    mediamax = mediaact;
-                    gmax = j;
-                }
+        for (j = 0; j < NGRUPOS; j++) {
+            nelem = listag[j].nelemg;
+            acum = 0;
+            for (k = 0; k < nelem; k++) {
+                actg = listag[j].elemg[k];
+                acum += enf[actg][i];
+            }
+            mediaact = acum / nelem;
+            if (mediaact < mediamin) {
+                mediamin = mediaact;
+                gmin = j;
+            } else if (mediaact >= mediamax) {
+                mediamax = mediaact;
+                gmax = j;
             }
         }
-#pragma omp barrier
         prob_enf[i].max = mediamax;
         prob_enf[i].min = mediamin;
         prob_enf[i].gmax = gmax;
