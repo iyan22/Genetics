@@ -34,7 +34,7 @@ double gendist (float *elem1, float *elem2) {
 void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
     int ngrupo, i, j;
     double adis, dmin;
-    #pragma omp parallel for private(i, j, adis, dmin, ngrupo) schedule(static,1) num_threads(32)
+    #pragma omp parallel for private(i, j, adis, dmin, ngrupo) schedule(dynamic,1) num_threads(32)
     for (i = 0; i < nelem; i++) {
         dmin = DBL_MAX;
         for (j = 0; j < NGRUPOS; j++) {
@@ -64,6 +64,7 @@ void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *
         else {
             acum = 0.0;
             cont = 0.0;
+            #pragma omp parallel for private(j, k, actg, othg) reduction(+:acum) reduction(+:cont) schedule(dynamic,2) num_threads(32)
             for (j = 0; j < nelem; j++) {
                 actg = listag[i].elemg[j];
                 for (k = j + 1; k < nelem; k++) {
