@@ -1,9 +1,9 @@
-/***********************************************************************************************************
- *                              AC - OpenMP -- SERIE                                                      *
- *                  Compilar con el modulo fun_s.c y la opcion -lm                                        *
+/**********************************************************************************************************
+ *                              AC - OpenMP -- PARALELO                                                   *
+ *                  Compilar con el modulo fun_p.c y la opcion -lm                                        *
  *                                  gengrupos_s.c                                                         *
  *                                                                                                        *
- *      Entrada: dbgen.dat    fichero con la informacion vserie de cada muestra                         *
+ *      Entrada: dbgen.dat    fichero con la informacion vserie de cada muestra                           *
  *               dbenf.dat    fichero con la informacion sobre las enfermedades de cada muestra           *
  *      Salida:  dbgen_s.out  centroides, densidad, analisis                                              *
  **********************************************************************************************************/
@@ -35,8 +35,8 @@ int main (int argc, char *argv[]) {
     double  discent;
 
     FILE   *fd;
-    struct timespec  t1, t2;
-    double texe;
+    struct timespec  t1, t2, t3;
+    double tlec, tclu, tord, tden, tenf, tesc, texe;
 
     if ((argc < 3)  || (argc > 4)) {
         printf ("ERROR:  gengrupos bd_muestras bd_enfermedades [num_elem]\n");
@@ -48,18 +48,24 @@ int main (int argc, char *argv[]) {
 
 
     // Lectura de datos (muestras): elem[i][j]
+    clock_gettime (CLOCK_REALTIME, &t2);
     fd = fopen (argv[1], "r");
     if (fd == NULL) {
         printf ("Error al abrir el fichero %s\n", argv[1]);
         exit (-1);
     }
 
+    // 4. parametro: Numero de elementos
     fscanf (fd, "%d", &nelem);
-    if (argc == 4) nelem = atoi(argv[3]);	// 4. parametro: numero de elementos
+    if (argc == 4) {
+        nelem = atoi(argv[3]);
+    }
 
-    for (i=0; i<nelem; i++)
-        for (j=0; j<NCAR; j++)
-            fscanf (fd, "%f", &(elem[i][j]));
+    for (i=0; i<nelem; i++) {
+        for (j = 0; j < NCAR; j++) {
+            fscanf(fd, "%f", &(elem[i][j]));
+        }
+    }
 
     fclose (fd);
 
@@ -76,16 +82,19 @@ int main (int argc, char *argv[]) {
             fscanf (fd, "%f", &(enf[i][j]));
     }
     fclose (fd);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tlec = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
 
+    clock_gettime (CLOCK_REALTIME, &t2);
     // Generacion de los primeros centroides de forma aleatoria
     srand (147);
-    for (i=0; i<NGRUPOS; i++)
-        for (j=0; j<NCAR/2; j++)
-        {
+    for (i=0; i<NGRUPOS; i++) {
+        for (j = 0; j < NCAR / 2; j++) {
             cent[i][j] = (rand() % 10000) / 100.0;
-            cent[i][j+(NCAR/2)] = cent[i][j];
+            cent[i][j + (NCAR / 2)] = cent[i][j];
         }
+    }
 
 
     // 1. fase: Clasificar los elementos y calcular los nuevos centroides
@@ -133,10 +142,13 @@ int main (int argc, char *argv[]) {
 
         num_ite++;
     } // while
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tclu = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
 
 
     // 2. fase: Numero de elementos de cada grupo; densidad; analisis enfermedades
+    clock_gettime (CLOCK_REALTIME, &t2);
     for (i=0; i<NGRUPOS; i++) {
         listag[i].nelemg = 0;
     }
@@ -148,17 +160,26 @@ int main (int argc, char *argv[]) {
         listag[grupo].elemg[num] = i;	// Elementos de cada grupo (cluster)
         listag[grupo].nelemg++;
     }
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tord = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Densidad de cada cluster: media de las distancias entre todos los elementos
+    clock_gettime (CLOCK_REALTIME, &t2);
     calcular_densidad (elem, listag, densidad);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tden = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Analisis de enfermedades
+    clock_gettime (CLOCK_REALTIME, &t2);
     analizar_enfermedades (listag, enf, prob_enf);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tenf = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Escritura de resultados en el fichero de salida
-    fd = fopen ("dbgen_s.out", "w");
+    clock_gettime (CLOCK_REALTIME, &t2);
+    fd = fopen ("dbgen_p.out", "w");
     if (fd == NULL) {
-        printf ("Error al abrir el fichero dbgen_out.s\n");
+        printf ("Error al abrir el fichero dbgen_p.out\n");
         exit (-1);
     }
 
@@ -180,9 +201,11 @@ int main (int argc, char *argv[]) {
     }
 
     fclose (fd);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tenf = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
-    clock_gettime (CLOCK_REALTIME, &t2);
-    texe = (t2.tv_sec-t1.tv_sec) + (t2.tv_nsec-t1.tv_nsec)/(double)1e9;
+    clock_gettime (CLOCK_REALTIME, &t3);
+    texe = (t3.tv_sec-t1.tv_sec) + (t3.tv_nsec-t1.tv_nsec)/(double)1e9;
 
 
 
@@ -205,8 +228,15 @@ int main (int argc, char *argv[]) {
         printf("Enfermedad: %2d - max: %4.2f (grupo %2d) - min: %4.2f (grupo %2d)\n",
                i, prob_enf[i].max, prob_enf[i].gmax, prob_enf[i].min, prob_enf[i].gmin);
     }
-    printf ("\n >> Numero de iteraciones: %d", num_ite);
-    printf ("\n >> Tex (serie): %1.3f s\n\n", texe);
+    printf ("\n >> Numero de iteraciones: %d\n", num_ite);
+    printf ("\n >> Tiempos de ejecución: ");
+    printf ("\n    - Lectura: %10.3f s", tlec);
+    printf ("\n    - Clustering: %7.3f s", tclu);
+    printf ("\n    - Ordenación: %7.3f s", tord);
+    printf ("\n    - Densidad: %9.3f s", tden);
+    printf ("\n    - Enfermedades: %1.3f s", tenf);
+    printf ("\n    - Escritura: %8.3f s", tesc);
+    printf ("\n    - Total: %12.3f s\n", texe);
 
     return 0;
 }
