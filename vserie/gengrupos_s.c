@@ -35,8 +35,8 @@ int main (int argc, char *argv[]) {
     double  discent;
 
     FILE   *fd;
-    struct timespec  t1, t2;
-    double texe;
+    struct timespec  t1, t2, t3;
+    double tlec, tclu, tord, tden, tenf, tesc, texe;
 
     if ((argc < 3)  || (argc > 4)) {
         printf ("ERROR:  gengrupos bd_muestras bd_enfermedades [num_elem]\n");
@@ -48,6 +48,7 @@ int main (int argc, char *argv[]) {
 
 
     // Lectura de datos (muestras): elem[i][j]
+    clock_gettime (CLOCK_REALTIME, &t2);
     fd = fopen (argv[1], "r");
     if (fd == NULL) {
         printf ("Error al abrir el fichero %s\n", argv[1]);
@@ -81,8 +82,11 @@ int main (int argc, char *argv[]) {
             fscanf (fd, "%f", &(enf[i][j]));
     }
     fclose (fd);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tlec = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
 
+    clock_gettime (CLOCK_REALTIME, &t2);
     // Generacion de los primeros centroides de forma aleatoria
     srand (147);
     for (i=0; i<NGRUPOS; i++) {
@@ -138,10 +142,13 @@ int main (int argc, char *argv[]) {
 
         num_ite++;
     } // while
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tclu = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
 
 
     // 2. fase: Numero de elementos de cada grupo; densidad; analisis enfermedades
+    clock_gettime (CLOCK_REALTIME, &t2);
     for (i=0; i<NGRUPOS; i++) {
         listag[i].nelemg = 0;
     }
@@ -153,14 +160,23 @@ int main (int argc, char *argv[]) {
         listag[grupo].elemg[num] = i;	// Elementos de cada grupo (cluster)
         listag[grupo].nelemg++;
     }
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tord = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Densidad de cada cluster: media de las distancias entre todos los elementos
+    clock_gettime (CLOCK_REALTIME, &t2);
     calcular_densidad (elem, listag, densidad);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tden = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Analisis de enfermedades
+    clock_gettime (CLOCK_REALTIME, &t2);
     analizar_enfermedades (listag, enf, prob_enf);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tenf = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Escritura de resultados en el fichero de salida
+    clock_gettime (CLOCK_REALTIME, &t2);
     fd = fopen ("dbgen_s.out", "w");
     if (fd == NULL) {
         printf ("Error al abrir el fichero dbgen_out.s\n");
@@ -185,9 +201,11 @@ int main (int argc, char *argv[]) {
     }
 
     fclose (fd);
+    clock_gettime (CLOCK_REALTIME, &t3);
+    tenf = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
-    clock_gettime (CLOCK_REALTIME, &t2);
-    texe = (t2.tv_sec-t1.tv_sec) + (t2.tv_nsec-t1.tv_nsec)/(double)1e9;
+    clock_gettime (CLOCK_REALTIME, &t3);
+    texe = (t3.tv_sec-t1.tv_sec) + (t3.tv_nsec-t1.tv_nsec)/(double)1e9;
 
 
 
@@ -210,10 +228,15 @@ int main (int argc, char *argv[]) {
         printf("Enfermedad: %2d - max: %4.2f (grupo %2d) - min: %4.2f (grupo %2d)\n",
                i, prob_enf[i].max, prob_enf[i].gmax, prob_enf[i].min, prob_enf[i].gmin);
     }
-    printf ("\n >> Numero de iteraciones: %d", num_ite);
-    printf ("\n >> Tex (serie): %1.3f s\n\n", texe);
+    printf ("\n >> Numero de iteraciones: %d\n\n", num_ite);
+    printf ("\n >> Tiempos de ejecución: \n");
+    printf ("\n    - Lectura: %5.3f s\n", tlec);
+    printf ("\n    - Clustering: %2.3f s\n", tclu);
+    printf ("\n    - Ordenación: %2.3f s\n", tord);
+    printf ("\n    - Densidad: %4.3f s\n", tden);
+    printf ("\n    - Enfermedades: %1.3f s\n", tenf);
+    printf ("\n    - Escritura: %3.3f s\n", tesc);
+    printf ("\n    - Total: %7.3f s\n", texe);
 
     return 0;
 }
-
-
