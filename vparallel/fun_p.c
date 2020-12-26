@@ -64,7 +64,7 @@ void calcular_densidad (float elem[][NCAR], struct lista_grupos *listag, float *
         else {
             acum = 0.0;
             cont = 0.0;
-            #pragma omp parallel for private(j, k, actg, othg) reduction(+:acum) reduction(+:cont) schedule(dynamic,2) num_threads(32)
+            #pragma omp parallel for private(j, k, actg, othg) reduction(+ : acum, cont) schedule(dynamic,2) num_threads(32)
             for (j = 0; j < nelem; j++) {
                 actg = listag[i].elemg[j];
                 for (k = j + 1; k < nelem; k++) {

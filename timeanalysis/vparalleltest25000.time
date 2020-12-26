@@ -1,0 +1,8 @@
+ >> Tiempos de ejecución: 
+    - Lectura:       0.392 s
+    - Clustering:    0.312 s
+    - Ordenación:    0.018 s
+    - Densidad:      0.025 s
+    - Enfermedades:  0.003 s
+    - Escritura:     0.000 s
+    - Total:         0.752 s
