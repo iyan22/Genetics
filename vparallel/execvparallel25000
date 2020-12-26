@@ -1,0 +1,2 @@
+gcc -O2 -o gengrupos_p gengrupos_p.c fun_s.c -lm -fopenmp
+./gengrupos_p dbgen.dat dbenf.dat 25000

@@ -228,15 +228,15 @@ int main (int argc, char *argv[]) {
         printf("Enfermedad: %2d - max: %4.2f (grupo %2d) - min: %4.2f (grupo %2d)\n",
                i, prob_enf[i].max, prob_enf[i].gmax, prob_enf[i].min, prob_enf[i].gmin);
     }
-    printf ("\n >> Numero de iteraciones: %d\n\n", num_ite);
-    printf ("\n >> Tiempos de ejecución: \n");
-    printf ("\n    - Lectura: %5.3f s\n", tlec);
-    printf ("\n    - Clustering: %2.3f s\n", tclu);
-    printf ("\n    - Ordenación: %2.3f s\n", tord);
-    printf ("\n    - Densidad: %4.3f s\n", tden);
-    printf ("\n    - Enfermedades: %1.3f s\n", tenf);
-    printf ("\n    - Escritura: %3.3f s\n", tesc);
-    printf ("\n    - Total: %7.3f s\n", texe);
+    printf ("\n >> Numero de iteraciones: %d\n", num_ite);
+    printf ("\n >> Tiempos de ejecución: ");
+    printf ("\n    - Lectura: %10.3f s", tlec);
+    printf ("\n    - Clustering: %7.3f s", tclu);
+    printf ("\n    - Ordenación: %7.3f s", tord);
+    printf ("\n    - Densidad: %9.3f s", tden);
+    printf ("\n    - Enfermedades: %1.3f s", tenf);
+    printf ("\n    - Escritura: %8.3f s", tesc);
+    printf ("\n    - Total: %12.3f s\n", texe);
 
     return 0;
 }

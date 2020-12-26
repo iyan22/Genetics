@@ -10,7 +10,7 @@
 
 
 /**********************************************************************************************************
- * 1 - Funcion para calcular la distancia vserie entre dos elementos (distancia euclidea)                 *
+ * 1 - Funcion para calcular la distancia euclidea entre dos elementos (distancia euclidea)                 *
  *          Entrada:  2 elementos con NCAR caracteristicas (por referencia)                               *
  *          Salida:   distancia (double)                                                                  *
  **********************************************************************************************************/
