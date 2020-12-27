@@ -230,13 +230,13 @@ int main (int argc, char *argv[]) {
     }
     printf ("\n >> Numero de iteraciones: %d\n", num_ite);
     printf ("\n >> Tiempos de ejecución: ");
-    printf ("\n    - Lectura: %10.3f s", tlec);
-    printf ("\n    - Clustering: %7.3f s", tclu);
-    printf ("\n    - Ordenación: %7.3f s", tord);
-    printf ("\n    - Densidad: %9.3f s", tden);
-    printf ("\n    - Enfermedades: %1.3f s", tenf);
-    printf ("\n    - Escritura: %8.3f s", tesc);
-    printf ("\n    - Total: %12.3f s\n", texe);
+    printf ("\n    - Lectura: %11.3f s", tlec);
+    printf ("\n    - Clustering: %8.3f s", tclu);
+    printf ("\n    - Ordenación: %8.3f s", tord);
+    printf ("\n    - Densidad: %10.3f s", tden);
+    printf ("\n    - Enfermedades: %6.3f s", tenf);
+    printf ("\n    - Escritura: %9.3f s", tesc);
+    printf ("\n    - Total: %13.3f s\n\n", texe);
 
     return 0;
 }

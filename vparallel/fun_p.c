@@ -1,5 +1,5 @@
 /**********************************************************************************************************
- *                              AC - OpenMP -- PARALELO                                                   *
+ *                              AC - OpenMP -- PARALELA                                                   *
  *                  Rutinas que se utilizan en el modulo gengrupos_s.c                                    *
  *                                   fun_p.c                                                              *
  **********************************************************************************************************/
@@ -91,6 +91,7 @@ void analizar_enfermedades (struct lista_grupos *listag, float enf[][TENF], stru
         for (j = 0; j < NGRUPOS; j++) {
             nelem = listag[j].nelemg;
             acum = 0;
+            #pragma omp parallel for private(k, actg, mediaact) shared(mediamin, mediamax, gmin, gmax) reduction(+ : acum) schedule(static,1) num_threads(32)
             for (k = 0; k < nelem; k++) {
                 actg = listag[j].elemg[k];
                 acum += enf[actg][i];
