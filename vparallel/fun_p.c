@@ -34,7 +34,7 @@ double gendist (float *elem1, float *elem2) {
 void grupo_cercano (int nelem, float elem[][NCAR], float cent[][NCAR], int *popul) {
     int ngrupo, i, j;
     double adis, dmin;
-    #pragma omp parallel for private(i, j, adis, dmin, ngrupo) schedule(dynamic,1) num_threads(32)
+    #pragma omp parallel for private(i, j, adis, dmin, ngrupo) schedule(dynamic,2) num_threads(32)
     for (i = 0; i < nelem; i++) {
         dmin = DBL_MAX;
         for (j = 0; j < NGRUPOS; j++) {
@@ -91,7 +91,7 @@ void analizar_enfermedades (struct lista_grupos *listag, float enf[][TENF], stru
         for (j = 0; j < NGRUPOS; j++) {
             nelem = listag[j].nelemg;
             acum = 0;
-            #pragma omp parallel for private(k, actg, mediaact) shared(mediamin, mediamax, gmin, gmax) reduction(+ : acum) schedule(static,1) num_threads(32)
+            #pragma omp parallel for private(k, actg, mediaact) shared(mediamin, mediamax, gmin, gmax) reduction(+ : acum) schedule(static) num_threads(2)
             for (k = 0; k < nelem; k++) {
                 actg = listag[j].elemg[k];
                 acum += enf[actg][i];
