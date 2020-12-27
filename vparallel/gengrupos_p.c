@@ -119,19 +119,19 @@ int main (int argc, char *argv[]) {
         // Calcular el grupo mas cercano
         grupo_cercano (nelem, elem, cent, popul);
 
-        #pragma omp parallel num_threads(32)
+#pragma omp parallel num_threads(32)
         {
             // Calcular los nuevos centroides de los grupos
             // Media de cada caracteristica
             // Acumular los valores de cada caracteristica (100); numero de elementos al final
-            #pragma omp for private(i, j)  schedule(static)
+#pragma omp for private(i, j)  schedule(dynamic,2)
             for (i = 0; i < NGRUPOS; i++) {
                 for (j = 0; j < NCAR + 1; j++) {
                     additions[i][j] = 0.0;
                 }
             }
 
-            #pragma omp single
+#pragma omp single
             {
                 for (i = 0; i < nelem; i++) {
                     for (j = 0; j < NCAR; j++) {
@@ -143,7 +143,7 @@ int main (int argc, char *argv[]) {
                 fin = 1;
             }
             // Calcular los nuevos centroides y decidir si el proceso ha finalizado o no (en funcion de DELTA)
-            #pragma omp for private(i, j, discent) schedule(static)
+#pragma omp for private(i, j, discent) schedule(dynamic,2)
             for (i = 0; i < NGRUPOS; i++) {
                 // Ese grupo (cluster) no esta vacio
                 if (additions[i][NCAR] > 0) {
@@ -164,7 +164,7 @@ int main (int argc, char *argv[]) {
                     }
                 }
             }
-            #pragma omp single
+#pragma omp single
             {
                 num_ite++;
             }
@@ -180,7 +180,7 @@ int main (int argc, char *argv[]) {
     // 2. fase: Numero de elementos de cada grupo; densidad; analisis enfermedades
     // Tiempo de inicio de ordenacion
     clock_gettime(CLOCK_REALTIME, &t2);
-    #pragma omp parallel for private(i) schedule(static)
+#pragma omp parallel for private(i) schedule(static,2) num_threads(8)
     for (i = 0; i < NGRUPOS; i++) {
         listag[i].nelemg = 0;
     }

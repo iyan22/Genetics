@@ -1,11 +1,12 @@
  >> Tiempos de ejecución: 
-    - Lectura:       3.292 s
-    - Clustering:    6.646 s
-    - Ordenación:    0.020 s
-    - Densidad:      0.925 s
+    - Lectura:       3.303 s
+    - Clustering:    6.674 s
+    - Ordenación:    0.005 s
+    - Densidad:      0.909 s
     - Enfermedades:  0.003 s
     - Escritura:     0.000 s
     - Total:        10.908 s
+
 
 
 
