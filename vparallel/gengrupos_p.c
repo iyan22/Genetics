@@ -1,5 +1,5 @@
 /**********************************************************************************************************
- *                              AC - OpenMP -- PARALELO                                                   *
+ *                              AC - OpenMP -- PARALELA                                                   *
  *                  Compilar con el modulo fun_p.c y la opcion -lm                                        *
  *                                  gengrupos_s.c                                                         *
  *                                                                                                        *
@@ -45,11 +45,16 @@ int main (int argc, char *argv[]) {
     }
 
     printf("\n >> Ejecucion paralela\n");
+
+    // Tiempo de inicio del programa
     clock_gettime(CLOCK_REALTIME, &t1);
 
 
     // Lectura de datos (muestras): elem[i][j]
+
+    // Tiempo de inicio de lectura
     clock_gettime(CLOCK_REALTIME, &t2);
+
     fd = fopen(argv[1], "r");
     if (fd == NULL) {
         printf("Error al abrir el fichero %s\n", argv[1]);
@@ -62,7 +67,10 @@ int main (int argc, char *argv[]) {
         nelem = atoi(argv[3]);
     }
 
-
+    // EXPLICACION
+    // No se puede paralelizar el escaneo de un fichero, ya que a medida que el for va iterando, se van leyendo los nelem
+    // elementos. No hay forma de acceder a los datos del fichero en forma de índices, por lo que no se puede dividir la
+    // carga de trabajo de este for.
     for (i = 0; i < nelem; i++) {
         for (j = 0; j < NCAR; j++) {
             fscanf(fd, "%f", &(elem[i][j]));
@@ -79,15 +87,21 @@ int main (int argc, char *argv[]) {
         exit(-1);
     }
 
+    // EXPLICACION
+    // No se puede paralelizar el escaneo de un fichero, ya que a medida que el for va iterando, se van leyendo los nelem
+    // elementos. No hay forma de acceder a los datos del fichero en forma de índices, por lo que no se puede dividir la
+    // carga de trabajo de este for.
     for (i = 0; i < nelem; i++) {
         for (j = 0; j < TENF; j++)
             fscanf(fd, "%f", &(enf[i][j]));
     }
     fclose(fd);
+
+    // Tiempo de finalización de lectura y cálculo
     clock_gettime (CLOCK_REALTIME, &t3);
     tlec = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
-
+    // Tiempo de inicio de clustering
     clock_gettime (CLOCK_REALTIME, &t2);
     // Generacion de los primeros centroides de forma aleatoria
     srand (147);
@@ -105,80 +119,106 @@ int main (int argc, char *argv[]) {
         // Calcular el grupo mas cercano
         grupo_cercano (nelem, elem, cent, popul);
 
-        // Calcular los nuevos centroides de los grupos
-        // Media de cada caracteristica
-        // Acumular los valores de cada caracteristica (100); numero de elementos al final
-        for (i = 0; i < NGRUPOS; i++) {
-            for (j = 0; j < NCAR + 1; j++) {
-                additions[i][j] = 0.0;
-            }
-        }
-
-        for (i = 0; i < nelem; i++) {
-            for (j = 0; j < NCAR; j++) {
-                additions[popul[i]][j] += elem[i][j];
-            }
-            additions[popul[i]][NCAR]++;
-        }
-
-        // Calcular los nuevos centroides y decidir si el proceso ha finalizado o no (en funcion de DELTA)
-        fin = 1;
-        for (i = 0; i < NGRUPOS; i++) {
-            // Ese grupo (cluster) no esta vacio
-            if (additions[i][NCAR] > 0) {
-                for (j = 0; j < NCAR; j++) {
-                    newcent[i][j] = additions[i][j] / additions[i][NCAR];
-                }
-
-                // Decidir si el proceso ha finalizado
-                discent = gendist (&newcent[i][0], &cent[i][0]);
-                // En alguna centroide hay cambios; continuar
-                if (discent > DELTA) {
-                    fin = 0;
-                }
-
-                // Copiar los nuevos centroides
-                for (j = 0; j < NCAR; j++) {
-                    cent[i][j] = newcent[i][j];
+        #pragma omp parallel num_threads(32)
+        {
+            // Calcular los nuevos centroides de los grupos
+            // Media de cada caracteristica
+            // Acumular los valores de cada caracteristica (100); numero de elementos al final
+            #pragma omp for private(i, j)  schedule(static)
+            for (i = 0; i < NGRUPOS; i++) {
+                for (j = 0; j < NCAR + 1; j++) {
+                    additions[i][j] = 0.0;
                 }
             }
+
+            #pragma omp single
+            {
+                for (i = 0; i < nelem; i++) {
+                    for (j = 0; j < NCAR; j++) {
+                        additions[popul[i]][j] += elem[i][j];
+                    }
+                    additions[popul[i]][NCAR]++;
+                }
+
+                fin = 1;
+            }
+            // Calcular los nuevos centroides y decidir si el proceso ha finalizado o no (en funcion de DELTA)
+            #pragma omp for private(i, j, discent) schedule(static)
+            for (i = 0; i < NGRUPOS; i++) {
+                // Ese grupo (cluster) no esta vacio
+                if (additions[i][NCAR] > 0) {
+                    for (j = 0; j < NCAR; j++) {
+                        newcent[i][j] = additions[i][j] / additions[i][NCAR];
+                    }
+
+                    // Decidir si el proceso ha finalizado
+                    discent = gendist (&newcent[i][0], &cent[i][0]);
+                    // En alguna centroide hay cambios; continuar
+                    if (discent > DELTA) {
+                        fin = 0;
+                    }
+
+                    // Copiar los nuevos centroides
+                    for (j = 0; j < NCAR; j++) {
+                        cent[i][j] = newcent[i][j];
+                    }
+                }
+            }
+            #pragma omp single
+            {
+                num_ite++;
+            }
         }
-        num_ite++;
     } // while
+
+    // Tiempo de finalización de clustering y cálculo
     clock_gettime(CLOCK_REALTIME, &t3);
     tclu = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
 
 
     // 2. fase: Numero de elementos de cada grupo; densidad; analisis enfermedades
+    // Tiempo de inicio de ordenacion
     clock_gettime(CLOCK_REALTIME, &t2);
+    #pragma omp parallel for private(i) schedule(static)
     for (i = 0; i < NGRUPOS; i++) {
         listag[i].nelemg = 0;
     }
 
     // Numero de elementos y su clasificacion
+    // EXPLICACION
+    // Debido a las dependencias sucesivas entre todos los elementos del for, no es posible paralelizarlo ya que tendríamos
+    // que utilizar diversas secciones crítcas.
     for (i = 0; i < nelem; i++) {
         grupo = popul[i];
         num = listag[grupo].nelemg;
         listag[grupo].elemg[num] = i;	// Elementos de cada grupo (cluster)
         listag[grupo].nelemg++;
     }
+
+    // Tiempo de finalización de ordenación y cálculo
     clock_gettime(CLOCK_REALTIME, &t3);
     tord = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Densidad de cada cluster: media de las distancias entre todos los elementos
+    // Tiempo de inicio de densidad
     clock_gettime(CLOCK_REALTIME, &t2);
     calcular_densidad (elem, listag, densidad);
+    // Tiempo de finalización de densidad y cálculo
     clock_gettime(CLOCK_REALTIME, &t3);
     tden = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Analisis de enfermedades
+    // Tiempo de inicio de enfermedades
     clock_gettime(CLOCK_REALTIME, &t2);
     analizar_enfermedades (listag, enf, prob_enf);
+    // Tiempo de finalización de enfermedades y cálculo
     clock_gettime(CLOCK_REALTIME, &t3);
     tenf = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
 
     // Escritura de resultados en el fichero de salida
+
+    // Tiempo de inicio de escritura
     clock_gettime(CLOCK_REALTIME, &t2);
     fd = fopen ("dbgen_p.out", "w");
     if (fd == NULL) {
@@ -204,6 +244,7 @@ int main (int argc, char *argv[]) {
     }
 
     fclose (fd);
+    // Tiempo de finalización de escritura, total y cálculos
     clock_gettime(CLOCK_REALTIME, &t3);
     tenf = (t3.tv_sec-t2.tv_sec) + (t3.tv_nsec-t2.tv_nsec)/(double)1e9;
     texe = (t3.tv_sec-t1.tv_sec) + (t3.tv_nsec-t1.tv_nsec)/(double)1e9;
@@ -245,4 +286,3 @@ int main (int argc, char *argv[]) {
 
     return 0;
 }
-
