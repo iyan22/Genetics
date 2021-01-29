@@ -26,7 +26,13 @@ The time analysis comparison based on the different versions, schedules or threa
 <br /> 
 <br /> 
 
+## Note
+The original idea and the basic material of the project (statement, structure and algorithms, main program and databases) are intellectual property of the Computer Architecture and Technology Department (University of the Basque Country, UPV/EHU).
 
-#### Code execution - Warning!!! ⚠️
+<br /> 
+<br /> 
+
+
+## Code execution - Warning!!! ⚠️
 The execute may not be the same as the given ones in res1000.out and res.out. 
 We do use a random number generator function and the fucntioning of this may depend on the compiler that you are using.
